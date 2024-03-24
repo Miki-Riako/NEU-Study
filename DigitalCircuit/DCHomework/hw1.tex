@@ -11,6 +11,7 @@
 \usepackage{tikz}
 \usepackage{titlesec}
 \usepackage{xcolor}
+\usepackage{xeCJK}
 \definecolor{lightblue}{RGB}{135, 206, 250}
 \tcbuselibrary{skins,theorems}
 
@@ -310,6 +311,7 @@ $$F=ABC+A\overline B\;\overline C+\overline AB\overline C+\overline A\;\overline
 \begin{center}\includegraphics[width=1\textwidth]{image/electrical_4.png}\end{center}
 \end{minipage}
 \end{Answer}
+
 \begin{question}{}{}
   1-19 Algebraic simplification.
 
@@ -335,6 +337,7 @@ $$F=ABC+A\overline B\;\overline C+\overline AB\overline C+\overline A\;\overline
 \end{flalign*}
 \end{minipage}
 \end{Answer}
+
 \begin{question}{}{}
   1-22 Karnaugh map simplification.
 \end{question}
@@ -395,55 +398,61 @@ $$F=ABC+A\overline B\;\overline C+\overline AB\overline C+\overline A\;\overline
 \end{karnaugh-map}\end{center}
 \end{minipage}
 \end{Answer}
+
 \begin{question}{}{}
   1-23 Karnaugh map simplification.
 \end{question}
 \begin{Answer}
 \noindent\begin{minipage}[t]{0.5\textwidth}
-(1)\quad$F=1$
+(1)\quad$F=\overline A\;\overline B+AC+B\overline C$
 \begin{center}\begin{karnaugh-map}[4][2][1][$BC$][$A$]
-  \minterms{0,1,2,3,4,5,6,7}
-  \implicant{0}{6}
+  \minterms{0,1,2,5,6,7}
+  \implicant{0}{1}
+  \implicant{5}{7}
+  \implicant{2}{6}
 \end{karnaugh-map}\end{center}
 
-(3)\quad$F=\overline BC+AB$
-\begin{center}\begin{karnaugh-map}[4][2][1][$BC$][$A$]
-  \minterms{1,5,6,7}
+(3)\quad$F=A\overline D+A\overline B\;\overline C+\overline A\;\overline CD+\overline BC\overline D$
+\begin{center}\begin{karnaugh-map}[4][4][1][$CD$][$AB$]
+  \minterms{1,2,5,8,9,10,12,14}
   \implicant{1}{5}
-  \implicant{7}{6}
+  \implicant{8}{9}
+  \implicantedge{12}{8}{14}{10}
+  \implicantedge{2}{2}{10}{10}
 \end{karnaugh-map}\end{center}
-
-(5)\quad$F=BC+\overline BD$
-\begin{center}\begin{karnaugh-map}[4][4][1][$CD$][$AB$]
-  \minterms{1,3,6,7,9,11,14,15}
-  \implicant{7}{14}
-  \implicantedge{1}{3}{9}{11}
-\end{karnaugh-map}\end{center}
-
 \end{minipage}\begin{minipage}[t]{0.5\textwidth}
-(2)\quad$F=C+D+A\overline B$
-\begin{center}\begin{karnaugh-map}[4][4][1][$CD$][$AB$]
-  \minterms{1,2,3,5,6,7,8,9,10,11,13,14,15}
-  \implicant{1}{11}
-  \implicant{3}{10}
-  \implicant{8}{10}
+(2)\quad$F=A\overline B+AC+\overline BC$
+\begin{center}\begin{karnaugh-map}[4][2][1][$BC$][$A$]
+  \minterms{1,4,5,7}
+  \implicant{4}{5}
+  \implicant{5}{7}
+  \implicant{1}{5}
 \end{karnaugh-map}\end{center}
 
-(4)\quad$F=\overline A+\overline B+\overline C+D$
+(4)\quad$F=\overline A\;\overline D$
 \begin{center}\begin{karnaugh-map}[4][4][1][$CD$][$AB$]
-  \minterms{0,1,2,3,4,5,6,7,8,9,10,11,12,13,15}
-  \implicant{0}{6}
-  \implicant{0}{9}
-  \implicant{1}{11}
-  \implicantcorner
+  \minterms{0,2,4,6}
+  \implicantedge{0}{4}{2}{6}
 \end{karnaugh-map}\end{center}
+\end{minipage}
 
-(6)\quad$F=C+\overline A\;\overline B+BD$
+
+
+\noindent\begin{minipage}[t]{0.5\textwidth}
+(5)\quad$F=\overline AC+\overline AB+BC$
+\begin{center}\begin{karnaugh-map}[4][2][1][$BC$][$A$]
+  \minterms{1,2,3,7}
+  \implicant{1}{3}
+  \implicant{3}{2}
+  \implicant{3}{7}
+\end{karnaugh-map}\end{center}
+\end{minipage}\begin{minipage}[t]{0.5\textwidth}
+(6)\quad$F=\overline B+C\overline D+\overline A\;\overline D$
 \begin{center}\begin{karnaugh-map}[4][4][1][$CD$][$AB$]
-  \minterms{0,1,2,3,5,6,7,13,14,15,10,11}
-  \implicant{3}{10}
-  \implicant{0}{2}
-  \implicant{5}{15}
+  \minterms{0,1,2,3,4,6,8,9,10,11,14}
+  \implicant{2}{10}
+  \implicantedge{0}{2}{8}{10}
+  \implicantedge{0}{4}{2}{6}
 \end{karnaugh-map}\end{center}
 \end{minipage}
 \end{Answer}
@@ -452,6 +461,61 @@ $$F=ABC+A\overline B\;\overline C+\overline AB\overline C+\overline A\;\overline
   1-24 Karnaugh map simplification.
 \end{question}
 \begin{Answer}
+\noindent\begin{minipage}[t]{0.5\textwidth}
+(1)\quad$F=\overline B+\overline C$
+\begin{center}\begin{karnaugh-map}[4][2][1][$BC$][$A$]
+  \minterms{0,1,2,4}
+  \indeterminants{5,6}
+  \implicant{0}{5}
+  \implicantedge{0}{4}{2}{6}
+\end{karnaugh-map}\end{center}
+\end{minipage}\begin{minipage}[t]{0.5\textwidth}
+(2)\quad$F=B+\overline AC+A\overline C$
+\begin{center}\begin{karnaugh-map}[4][2][1][$BC$][$A$]
+  \minterms{1,2,4,7}
+  \indeterminants{3,6}
+  \implicant{3}{6}
+  \implicant{1}{3}
+  \implicantedge{4}{4}{6}{6}
+\end{karnaugh-map}\end{center}
+\end{minipage}
 
+
+
+\noindent\begin{minipage}[t]{0.5\textwidth}
+(3)\quad$F=\overline A+\overline B\;\overline D$
+\begin{center}\begin{karnaugh-map}[4][4][1][$CD$][$AB$]
+  \minterms{3,5,6,7,10}
+  \indeterminants{0,1,2,4,8}
+  \implicant{0}{6}
+  \implicantcorner
+\end{karnaugh-map}\end{center}
+
+(5)\quad$F=B\overline C+\overline BC$
+\begin{center}\begin{karnaugh-map}[4][4][1][$CD$][$AB$]
+  \minterms{2,3,4,5}
+  \indeterminants{10,11,12,13}
+  \implicant{4}{13}
+  \implicantedge{3}{2}{11}{10}
+\end{karnaugh-map}\end{center}
+\end{minipage}\begin{minipage}[t]{0.5\textwidth}
+(4)\quad$F=CD+AC+\overline B\;\overline D$
+\begin{center}\begin{karnaugh-map}[4][4][1][$CD$][$AB$]
+  \minterms{2,3,7,8,11,14}
+  \indeterminants{0,5,10,15}
+  \implicant{3}{11}
+  \implicant{15}{10}
+  \implicantcorner
+\end{karnaugh-map}\end{center}
+\end{minipage}
 \end{Answer}
+\begin{flushright}\begin{tabular}{rl}
+  姓名: & 李俊洁\\
+  班级: & 计算机2204 \\
+  学号: & 20225443 \\
+  课程: & 数字逻辑与数字系统 \\
+  日期: & March 23, 2024 \\
+  制作: & \LaTeX \\
+  & 感谢您的批阅！
+\end{tabular}\end{flushright}
 \end{document}
