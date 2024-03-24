@@ -3,8 +3,12 @@
 \usepackage[a4paper, margin=2cm]{geometry}
 \usepackage{amsthm}
 \usepackage{amsmath, amssymb}
+\usepackage{circuitikz}
+\usepackage{graphicx}
+\usepackage{karnaugh-map}
 \usepackage{newtxtext, newtxmath}
 \usepackage{tcolorbox}
+\usepackage{tikz}
 \usepackage{titlesec}
 \usepackage{xcolor}
 \definecolor{lightblue}{RGB}{135, 206, 250}
@@ -179,15 +183,14 @@ $(2)\;\;47 = 01000111_{(BCD)}$
   (1) 01110; (2) 10101  
 \end{question}
 \begin{Answer}
-\begin{table}[h]
-\centering
+\begin{center}
 \begin{tabular}{|c|c|c|c|}
 \hline
 & Primitive & Inverse & Complementary \\ \hline
 (1) 01110 & 01110 & 01110 & 01110 \\ \hline
 (2) 10101 & 10101 & 11010 & 11011 \\ \hline
 \end{tabular}
-\end{table}
+\end{center}
 \end{Answer}
 
 \begin{question}{}{}
@@ -204,8 +207,251 @@ $(2)\;\;47 = 01000111_{(BCD)}$
 \end{Answer}
 
 \begin{question}{}{}
-  
+  1-14 Write logic expressions and draw logic diagrams.
 \end{question}
+\begin{Answer}
+\begin{align*}
+1-P-1: F &=\overline AB\overline C+A\overline BC+AB\overline C \\
+  &=A\overline BC+B\overline C
+\end{align*}
+\begin{center}\includegraphics[width=0.5\textwidth]{image/electrical_1.png}\end{center}
+\begin{align*}
+1-P-2: F &=\overline A\;\overline B\;\overline C+\overline ABC+ABC\\
+  &=\overline A\;\overline B\;\overline C+BC
+\end{align*}
+\begin{center}\includegraphics[width=0.5\textwidth]{image/electrical_2.png}\end{center}
+\end{Answer}
 
+\begin{question}{}{}
+  1-15 Write logic expressions and draw truth tables.
+\end{question}
+\begin{Answer}
+\noindent\begin{minipage}{0.5\textwidth}
+\begin{align*}
+(a)\;\; F &=\overline{\overline{\overline AC}\;\overline{A\overline B}\;\overline{B \overline C}}\\
+  &=\overline AC+A\overline B+B\overline C \\
+  \; \\
+  \; \\
+(b)\;\; X &= \overline{\overline{\overline{AB}+\overline{C(A\oplus B)}}} \\
+    &=\overline{AB}+\overline{C(A\oplus B)} \\
+    &=\overline A+\overline B+\overline C+\overline{A\overline B+\overline AB} \\
+    &=\overline A+\overline B+\overline C+\overline A\;\overline B+AB \\
+    &=1\\
+  Y &=(A\oplus B)\oplus C \\
+    &=(A\overline B+\overline AB)\oplus C \\
+    &=(A\overline B+\overline AB)\overline C+(\overline{A\overline B+\overline AB})C \\
+    &=A\overline B\;\overline C+\overline AB\overline C+\overline A\;\overline BC+ABC
+\end{align*}
+\end{minipage}\begin{minipage}{0.5\textwidth}
+\begin{center}\begin{tabular}{|c|c|c|c|}\hline
+A & B & C & F \\ \hline
+0 & 0 & 0 & 0 \\ \hline
+0 & 0 & 1 & 1 \\ \hline
+0 & 1 & 0 & 1 \\ \hline
+0 & 1 & 1 & 1 \\ \hline
+1 & 0 & 0 & 1 \\ \hline
+1 & 0 & 1 & 1 \\ \hline
+1 & 1 & 0 & 1 \\ \hline
+1 & 1 & 1 & 0 \\ \hline
+\end{tabular}\end{center}
+\begin{center}\begin{tabular}{|c|c|c|c|c|}\hline
+A & B & C & X & Y\\ \hline
+0 & 0 & 0 & 1 & 0\\ \hline
+0 & 0 & 1 & 1 & 1\\ \hline
+0 & 1 & 0 & 1 & 1\\ \hline
+0 & 1 & 1 & 1 & 0\\ \hline
+1 & 0 & 0 & 1 & 1\\ \hline
+1 & 0 & 1 & 1 & 0\\ \hline
+1 & 1 & 0 & 1 & 0\\ \hline
+1 & 1 & 1 & 1 & 1\\ \hline
+\end{tabular}\end{center}
+\end{minipage}
+\end{Answer}
+\begin{question}{}{}
+  1-16 The number of 1's greater than 0 is true.
+\end{question}
+\begin{Answer}
+\noindent\begin{minipage}{0.5\textwidth}
+\begin{center}\begin{tabular}{|c|c|c|c|}\hline
+A & B & C & F \\ \hline
+0 & 0 & 0 & 0 \\ \hline
+0 & 0 & 1 & 0 \\ \hline
+0 & 1 & 0 & 0 \\ \hline
+0 & 1 & 1 & 1 \\ \hline
+1 & 0 & 0 & 0 \\ \hline
+1 & 0 & 1 & 1 \\ \hline
+1 & 1 & 0 & 1 \\ \hline
+1 & 1 & 1 & 1 \\ \hline
+\end{tabular}\end{center}
+$$F=AB+AC+BC$$
+\end{minipage}\begin{minipage}{0.5\textwidth}
+\begin{center}\includegraphics[width=1\textwidth]{image/electrical_3.png}\end{center}
+\end{minipage}
+\end{Answer}
 
+\begin{question}{}{}
+  1-17 The number of 1's odd is true
+\end{question}
+\begin{Answer}
+\noindent\begin{minipage}{0.5\textwidth}
+\begin{center}\begin{tabular}{|c|c|c|c|}\hline
+A & B & C & F \\ \hline
+0 & 0 & 0 & 0 \\ \hline
+0 & 0 & 1 & 1 \\ \hline
+0 & 1 & 0 & 1 \\ \hline
+0 & 1 & 1 & 0 \\ \hline
+1 & 0 & 0 & 1 \\ \hline
+1 & 0 & 1 & 0 \\ \hline
+1 & 1 & 0 & 0 \\ \hline
+1 & 1 & 1 & 1 \\ \hline
+\end{tabular}\end{center}
+$$F=ABC+A\overline B\;\overline C+\overline AB\overline C+\overline A\;\overline BC$$
+\end{minipage}\begin{minipage}{0.5\textwidth}
+\begin{center}\includegraphics[width=1\textwidth]{image/electrical_4.png}\end{center}
+\end{minipage}
+\end{Answer}
+\begin{question}{}{}
+  1-19 Algebraic simplification.
+
+  (5) $F=(AB+\overline BC)\overline{AC+\overline A\;\overline C}$;
+  (6) $F=A(B\oplus C)+A(B+C)+A\overline B\;\overline C+\overline ABC$
+\end{question}
+\begin{Answer}
+\noindent\begin{minipage}{0.5\textwidth}
+\begin{flalign*}
+(5)\;\; F &= (AB+\overline BC)\overline{AC+\overline A\;\overline C} \\
+  &= (AB+\overline BC)(\overline A+\overline C)(A+C) \\
+  &= (AB\overline C+\overline A\;\overline BC)(A+C) \\
+  &= AB\overline C+\overline A\;\overline BC \\
+  \;
+\end{flalign*}
+\end{minipage}\begin{minipage}{0.5\textwidth}
+\begin{flalign*}
+(6)\;\; F &= A(B\oplus C)+A(B+C)+A\overline B\;\overline C+\overline ABC \\
+  &= A(B\overline C+\overline BC)+AB+AC+A\overline B\;\overline C+\overline ABC \\
+  &= AB\overline C+A\overline BC+AB+AC+A\overline B\;\overline C+\overline ABC \\
+  &= A+BC+AC \\
+  &= A+BC
+\end{flalign*}
+\end{minipage}
+\end{Answer}
+\begin{question}{}{}
+  1-22 Karnaugh map simplification.
+\end{question}
+\begin{Answer}
+\noindent\begin{minipage}[t]{0.5\textwidth}
+(1)\quad$F=1$
+\begin{center}\begin{karnaugh-map}[4][2][1][$BC$][$A$]
+  \minterms{0,1,2,3,4,5,6,7}
+  \implicant{0}{6}
+\end{karnaugh-map}\end{center}
+
+(3)\quad$F=\overline BC+AB$
+\begin{center}\begin{karnaugh-map}[4][2][1][$BC$][$A$]
+  \minterms{1,5,6,7}
+  \implicant{1}{5}
+  \implicant{7}{6}
+\end{karnaugh-map}\end{center}
+
+(5)\quad$F=BC+\overline BD$
+\begin{center}\begin{karnaugh-map}[4][4][1][$CD$][$AB$]
+  \minterms{1,3,6,7,9,11,14,15}
+  \implicant{7}{14}
+  \implicantedge{1}{3}{9}{11}
+\end{karnaugh-map}\end{center}
+
+(7)\quad$F=\overline AB+BC+C\overline D+\overline A\;\overline D$
+\begin{center}\begin{karnaugh-map}[4][4][1][$CD$][$AB$]
+  \maxterms{0,2,4,5,6,7,10,14,15}
+  \implicant{4}{6}
+  \implicant{7}{14}
+  \implicant{2}{10}
+  \implicantedge{0}{4}{2}{6}
+\end{karnaugh-map}\end{center}
+\end{minipage}\begin{minipage}[t]{0.5\textwidth}
+(2)\quad$F=C+D+A\overline B$
+\begin{center}\begin{karnaugh-map}[4][4][1][$CD$][$AB$]
+  \minterms{1,2,3,5,6,7,8,9,10,11,13,14,15}
+  \implicant{1}{11}
+  \implicant{3}{10}
+  \implicant{8}{10}
+\end{karnaugh-map}\end{center}
+
+(4)\quad$F=\overline A+\overline B+\overline C+D$
+\begin{center}\begin{karnaugh-map}[4][4][1][$CD$][$AB$]
+  \minterms{0,1,2,3,4,5,6,7,8,9,10,11,12,13,15}
+  \implicant{0}{6}
+  \implicant{0}{9}
+  \implicant{1}{11}
+  \implicantcorner
+\end{karnaugh-map}\end{center}
+
+(6)\quad$F=C+\overline A\;\overline B+BD$
+\begin{center}\begin{karnaugh-map}[4][4][1][$CD$][$AB$]
+  \minterms{0,1,2,3,5,6,7,13,14,15,10,11}
+  \implicant{3}{10}
+  \implicant{0}{2}
+  \implicant{5}{15}
+\end{karnaugh-map}\end{center}
+\end{minipage}
+\end{Answer}
+\begin{question}{}{}
+  1-23 Karnaugh map simplification.
+\end{question}
+\begin{Answer}
+\noindent\begin{minipage}[t]{0.5\textwidth}
+(1)\quad$F=1$
+\begin{center}\begin{karnaugh-map}[4][2][1][$BC$][$A$]
+  \minterms{0,1,2,3,4,5,6,7}
+  \implicant{0}{6}
+\end{karnaugh-map}\end{center}
+
+(3)\quad$F=\overline BC+AB$
+\begin{center}\begin{karnaugh-map}[4][2][1][$BC$][$A$]
+  \minterms{1,5,6,7}
+  \implicant{1}{5}
+  \implicant{7}{6}
+\end{karnaugh-map}\end{center}
+
+(5)\quad$F=BC+\overline BD$
+\begin{center}\begin{karnaugh-map}[4][4][1][$CD$][$AB$]
+  \minterms{1,3,6,7,9,11,14,15}
+  \implicant{7}{14}
+  \implicantedge{1}{3}{9}{11}
+\end{karnaugh-map}\end{center}
+
+\end{minipage}\begin{minipage}[t]{0.5\textwidth}
+(2)\quad$F=C+D+A\overline B$
+\begin{center}\begin{karnaugh-map}[4][4][1][$CD$][$AB$]
+  \minterms{1,2,3,5,6,7,8,9,10,11,13,14,15}
+  \implicant{1}{11}
+  \implicant{3}{10}
+  \implicant{8}{10}
+\end{karnaugh-map}\end{center}
+
+(4)\quad$F=\overline A+\overline B+\overline C+D$
+\begin{center}\begin{karnaugh-map}[4][4][1][$CD$][$AB$]
+  \minterms{0,1,2,3,4,5,6,7,8,9,10,11,12,13,15}
+  \implicant{0}{6}
+  \implicant{0}{9}
+  \implicant{1}{11}
+  \implicantcorner
+\end{karnaugh-map}\end{center}
+
+(6)\quad$F=C+\overline A\;\overline B+BD$
+\begin{center}\begin{karnaugh-map}[4][4][1][$CD$][$AB$]
+  \minterms{0,1,2,3,5,6,7,13,14,15,10,11}
+  \implicant{3}{10}
+  \implicant{0}{2}
+  \implicant{5}{15}
+\end{karnaugh-map}\end{center}
+\end{minipage}
+\end{Answer}
+
+\begin{question}{}{}
+  1-24 Karnaugh map simplification.
+\end{question}
+\begin{Answer}
+
+\end{Answer}
 \end{document}
