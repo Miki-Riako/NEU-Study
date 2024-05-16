@@ -179,10 +179,8 @@ def get_token(scanner):
         if token[0] in ['I', 'C1', 'C2']:
             tokens.append('i')
         elif token[0] == 'P':
-            if token[1] <= 14:
+            if token[1] in [8, 1, 9, 2, 3, 4]:
                 tokens.append(scanner.punctuation[token[1] - 1])
-            else:
-                continue
     return tokens
 
 if __name__ == "__main__":
