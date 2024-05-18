@@ -1,5 +1,6 @@
 module full_adder(
-    input A, B,
+    input A,
+    input B,
     input wire Cin,
     input wire Ctrl, // 低有效控制端
     output wire Sum,
