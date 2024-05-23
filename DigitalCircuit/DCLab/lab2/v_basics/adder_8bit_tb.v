@@ -7,6 +7,8 @@ module adder_8bit_tb;
     reg BCDCtrl;
     wire [11:0] Sum;
     wire Cout;
+    wire [7:0] dpy0;
+    wire [7:0] dpy1;
     adder_8bit DUT (
         .A(A), 
         .B(B), 
@@ -14,11 +16,13 @@ module adder_8bit_tb;
         .Ctrl(Ctrl), 
         .BCDCtrl(BCDCtrl),
         .Sum(Sum), 
-        .Cout(Cout)
+        .Cout(Cout),
+        .dpy0(dpy0),
+        .dpy1(dpy1)
     );
     initial begin
-        // $dumpfile("tb.vcd");
-        // $dumpvars(0, adder_8bit_tb);
+        $dumpfile("tb.vcd");
+        $dumpvars(0, adder_8bit_tb);
         A = 8'b00000000; B = 8'b00000000; Cin = 0; Ctrl = 0; BCDCtrl = 0;
         #10; A = 8'b11111111; B = 8'b00000001; Cin = 1; Ctrl = 1; BCDCtrl = 0;
         #10; A = 8'b00001111; B = 8'b11110000; Cin = 1; Ctrl = 1; BCDCtrl = 1;

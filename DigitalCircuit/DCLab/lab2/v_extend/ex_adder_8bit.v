@@ -3,12 +3,15 @@ module parallel_adder_8bit(
     input wire [7:0] B,
     input wire Cin,
     input wire Ctrl, // 低有效控制端
-    input wire BCDCtrl,
-    output wire [11:0] Sum,
-    output wire Cout
+    output wire [7:0] Sum,
+    output wire Cout,
+    output wire NegativeFlag
 );
     wire [7:0] BinarySum;
     wire Cout_lower, Cout_upper;
+
+    wire AFlag = A[7];
+    wire BFlag = B[7];
 
     parallel_adder_4bit adder_lower (
         .A(A[3:0]),
@@ -27,21 +30,7 @@ module parallel_adder_8bit(
         .Cout(Cout_upper)
     );
 
-    integer i;
-    reg [11:0] BCDSum;
-    always @(*) begin
-        BCDSum = 12'd0;
-        for (i = 7; i >= 0; i = i - 1) begin
-            if (BCDSum[3:0] > 4)
-                BCDSum[3:0] = BCDSum[3:0] + 3;
-            if (BCDSum[7:4] > 4)
-                BCDSum[7:4] = BCDSum[7:4] + 3;
-            if (BCDSum[11:8] > 4)
-                BCDSum[11:8] = BCDSum[11:8] + 3;
-            BCDSum = {BCDSum[10:0], BinarySum[i]};
-        end
-    end
-    
-    assign Cout = Cout_upper;
-    assign Sum = BCDCtrl ? BCDSum : {4'b0, BinarySum};
+    assign Cout = (AFlag ^ BFlag) ? 0 : (BinarySum[7] ? ~Cout_upper : Cout_upper);
+    assign NegativeFlag = (AFlag ^ BFlag) ? BinarySum[7] : (AFlag ? 1 : 0);
+    assign Sum = {NegativeFlag, BinarySum[6:0]};
 endmodule

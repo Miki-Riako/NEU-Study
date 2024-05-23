@@ -5,7 +5,9 @@ module adder_8bit(
     input wire Ctrl, // 低有效控制端
     input wire BCDCtrl,
     output wire [11:0]Sum,
-    output wire Cout
+    output wire Cout,
+    output wire [7:0] dpy0,
+    output wire [7:0] dpy1
 );
     wire [7:0] BinarySum;
     wire [6:0] carry;
@@ -35,4 +37,9 @@ module adder_8bit(
     end
     
     assign Sum = BCDCtrl ? BCDSum : {4'b0, BinarySum};
+
+    wire [3:0] lower_digit = BCDCtrl ? BCDSum[3:0] : BinarySum[3:0];
+    wire [3:0] upper_digit = BCDCtrl ? BCDSum[7:4] : BinarySum[7:4];
+    bit_to_7seg display0 (.ctrl(Ctrl), .bit(lower_digit), .seg(dpy0));
+    bit_to_7seg display1 (.ctrl(Ctrl), .bit(upper_digit), .seg(dpy1));
 endmodule
