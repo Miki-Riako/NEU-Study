@@ -3,10 +3,19 @@ create_clock -period 20.000 -name clk -waveform {0.000 10.000} [get_ports clk]
 set_property -dict {PACKAGE_PIN K21 IOSTANDARD LVCMOS33} [get_ports clk] ;# 50MHz main clock in
 
 set_property -dict {PACKAGE_PIN B24 IOSTANDARD LVCMOS33} [get_ports {running}]
+set_property -dict {PACKAGE_PIN E21 IOSTANDARD LVCMOS33} [get_ports {mode_flag}]
+set_property -dict {PACKAGE_PIN A24 IOSTANDARD LVCMOS33} [get_ports {led_blink}]
 set_property -dict {PACKAGE_PIN T2 IOSTANDARD LVCMOS33} [get_ports start] ;#BTN1
 set_property -dict {PACKAGE_PIN M1 IOSTANDARD LVCMOS33} [get_ports stop] ;#BTN2
-# set_property -dict {PACKAGE_PIN U1 IOSTANDARD LVCMOS33} [get_ports clk] ;#BTN5
+set_property -dict {PACKAGE_PIN P3 IOSTANDARD LVCMOS33} [get_ports mode_btn] ;#BTN3
 set_property -dict {PACKAGE_PIN U5 IOSTANDARD LVCMOS33} [get_ports rst] ;#BTN6
+
+set_property -dict {PACKAGE_PIN T3 IOSTANDARD LVCMOS33} [get_ports {value[0]}]
+set_property -dict {PACKAGE_PIN J3 IOSTANDARD LVCMOS33} [get_ports {value[1]}]
+set_property -dict {PACKAGE_PIN M2 IOSTANDARD LVCMOS33} [get_ports {value[2]}]
+set_property -dict {PACKAGE_PIN P1 IOSTANDARD LVCMOS33} [get_ports {value[3]}]
+set_property -dict {PACKAGE_PIN P4 IOSTANDARD LVCMOS33} [get_ports {value[4]}]
+set_property -dict {PACKAGE_PIN L5 IOSTANDARD LVCMOS33} [get_ports {value[5]}]
 
 #DPY0
 set_property -dict {PACKAGE_PIN B19 IOSTANDARD LVCMOS33} [get_ports {seg_ones[0]}]
