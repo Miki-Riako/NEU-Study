@@ -4,7 +4,7 @@ module divider (
     output reg clk_out
 );
     reg [25:0] counter;
-    // Divider to  50,000,000 times
+    // Divider to 50,000,000 times
     always @(posedge clk or posedge rst) begin
         if (rst) begin
             counter <= 26'd0;
