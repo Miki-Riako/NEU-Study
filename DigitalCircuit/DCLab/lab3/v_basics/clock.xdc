@@ -5,7 +5,6 @@ set_property -dict {PACKAGE_PIN K21 IOSTANDARD LVCMOS33} [get_ports clk] ;# 50MH
 set_property -dict {PACKAGE_PIN B24 IOSTANDARD LVCMOS33} [get_ports {running}]
 set_property -dict {PACKAGE_PIN T2 IOSTANDARD LVCMOS33} [get_ports start] ;#BTN1
 set_property -dict {PACKAGE_PIN M1 IOSTANDARD LVCMOS33} [get_ports stop] ;#BTN2
-# set_property -dict {PACKAGE_PIN U1 IOSTANDARD LVCMOS33} [get_ports clk] ;#BTN5
 set_property -dict {PACKAGE_PIN U5 IOSTANDARD LVCMOS33} [get_ports rst] ;#BTN6
 
 #DPY0

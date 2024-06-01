@@ -6,8 +6,9 @@ module counter (
     output reg [3:0] sec_ones,
     output reg [3:0] sec_tens,
     output wire running_flag
-);
+    );
     reg running;
+    assign running_flag = running;
     always @(posedge clk or posedge rst) begin
         if (rst) begin
             sec_ones <= 4'd0;
@@ -30,5 +31,4 @@ module counter (
             end
         end
     end
-    assign running_flag = running;
 endmodule
