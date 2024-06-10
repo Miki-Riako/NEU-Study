@@ -1,0 +1,404 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper, margin=2cm]{geometry}
+\usepackage{amsthm}
+\usepackage{amsmath, amssymb}
+\usepackage{circuitikz}
+\usepackage{graphicx}
+\usepackage{karnaugh-map}
+\usepackage{newtxtext, newtxmath}
+\usepackage{tcolorbox}
+\usepackage{tikz}
+\usepackage{titlesec}
+\usepackage{xcolor}
+\usepackage{xeCJK}
+\usepackage{listings}
+\definecolor{lightblue}{RGB}{135, 206, 250}
+\tcbuselibrary{skins,theorems}
+
+\titleformat{\section}[block]{\Large\bfseries\centering}{}{0pt}{}
+\titleformat{\subsection}[block]{\bfseries}{\thesubsection}{2pt}{}
+
+\newtcbtheorem[no counter]{proposition}{\large\hspace{-8pt}Proposition}{
+  enhanced,
+  colback=white,
+  colframe=lightblue,
+  left=12pt,
+  right=12pt,
+  top=24pt,
+  bottom=24pt,
+  fonttitle=\bfseries
+}{prop}
+\newtcbtheorem[]{question}{\large\hspace{-8pt}Question :}{
+  enhanced,
+  colback=white,
+  colframe=black,
+  left=12pt,
+  right=12pt,
+  top=24pt,
+  bottom=24pt,
+  fonttitle=\bfseries
+}{qst}
+\newenvironment{Answer}{
+  \vspace{12pt}
+  {\large\textbf{\textit{\hspace{-12pt}Answer:}}}\par
+  \vspace{8pt}
+} {\vspace{24pt}}
+\newenvironment{Proof}{
+  \vspace{12pt}
+  {\large\textbf{\textit{\hspace{-12pt}Proof:}}}\par
+  \vspace{8pt}
+} {\vspace{24pt}}
+
+\lstset{
+    language=Python,
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{green},
+    stringstyle=\color{red},
+    showstringspaces=false,
+    numberstyle=\tiny\color{gray},
+    stepnumber=1,
+    numbersep=10pt,
+    frame=single,
+    breaklines=true,
+    captionpos=b
+}
+
+\title{\textbf{编译原理课程设计阶段报告}}
+\date{June 10, 2024}
+
+\begin{document}
+\maketitle
+
+\section{引言}
+\quad\quad
+本项目旨在开发一个集成开发环境（IDE），支持基本的代码编辑、编译和运行功能。
+项目的核心是一个简单的编译器，负责对用户编写的代码进行词法分析、语法分析、中间代码生成以及解释执行。
+本文档是项目的中期报告，涵盖了项目背景、目标、当前进展、遇到的问题及挑战、下一步计划等内容。
+
+\section{项目目标}
+\quad\quad
+本项目的主要目标包括：
+\begin{itemize}
+    \item 开发一个支持基础语法和词法分析的编译器，能够处理简单的代码片段。
+    \item 实现一个集成开发环境，提供用户友好的界面，支持代码编辑、控制、编译和运行。
+    \item 支持错误检测和处理机制，能够在编译过程中识别并报告词法和语法错误。
+    \item 生成中间代码，并实现一个解释器以执行这些中间代码。
+\end{itemize}
+
+\section{目前完成的工作}
+\quad\quad 截至目前，项目已完成以下主要工作：
+
+\subsection{词法分析器}
+\quad\quad
+词法分析器是编译器的第一阶段，负责将输入的源代码转换为一系列词法单元（token）。
+在此阶段，我们实现了以下功能：
+\begin{itemize}
+    \item 识别关键字、标识符、常量、操作符和分隔符。关键字包括常见的编程语言构造如int、void、if、else等；标识符则是变量名和函数名。
+    \item 处理整数、浮点数、字符和字符串常量。词法分析器能够正确解析各种格式的数字和字符串，并生成相应的词法单元。
+    \item 生成词法单元序列，供语法分析器使用。这些词法单元包括标识符、关键字、常量、操作符等。
+\end{itemize}
+
+一开始，我们使用普通的自动机实现，但随着不同类型的CONSTANT设计的增加，自动机会变得非常复杂。
+因此，我们决定使用正则表达式来匹配不同类型的词法单元。
+通过定义一系列正则表达式规则，我们能够高效地解析输入代码，并生成对应的词法单元序列。
+
+部分 Python 代码示例如下：
+\begin{lstlisting}
+import re
+
+class Lexer:
+    def __init__(self, compiler):
+        self.compiler = compiler
+        self.re_keywords    = re.compile(r'\b(' + '|'.join(self.compiler.keywords) + r')\b')
+        self.re_punctuation = re.compile(r'==|<=|>=|\+\+|[-/()<+*>=,;{}]')
+        self.re_identifier  = re.compile(r'\b[a-zA-Z_][a-zA-Z0-9_]*\b')
+        self.re_float       = re.compile(r'\b\d+(\.\d+([eE][+-]?\d+)?|[eE][+-]?\d+)\b')
+        self.re_decimal     = re.compile(r'\b\d+\b')
+        self.re_hexadecimal = re.compile(r'\b0[xX][0-9a-fA-F]+\b')
+        self.re_char        = re.compile(r"'([^'\\]|\\.)'")
+        self.re_string      = re.compile(r'"((?:[^"\\]|\\.)*)"')
+    
+    def tokenize(self):
+        ...
+    
+    def append_token(self, type, val):
+        self.compiler.tokens.append(self.make_token(type, val))
+    
+    def make_token(self, type, val):
+        return (type, getattr(self.compiler, type).index(val))
+\end{lstlisting}
+
+\subsection{语法分析器}
+\quad\quad 
+语法分析器是编译器的第二阶段，负责将词法分析器生成的词法单元序列转换为语法树或中间代码。
+其中我们选择的是生成中间代码。
+具体实现了以下功能：
+
+\begin{itemize}
+    \item 识别和处理基本的表达式和语句，包括赋值语句、算术运算、逻辑运算等。
+    \item 生成中间代码，支持基本的算术和逻辑运算。通过遍历语法树，生成相应的四元式表示的中间代码。
+    \item 处理基本的控制结构，如if语句和while循环。语法分析器能够正确解析这些控制结构，并生成相应的中间代码。
+\end{itemize}
+
+语法分析器通过递归下降解析技术来实现。我们定义了一系列的递归函数，每个函数负责解析一种语法结构。这种方法使得语法分析器具有良好的扩展性和维护性。
+
+部分 Python 代码示例如下：
+\begin{lstlisting}
+class Parser:
+    def __init__(self, compiler):
+        self.compiler = compiler
+        self.compiler.tokens += [('END', -1)]
+        self.index = 0
+        self.cur = self.compiler.tokens[self.index]
+        self.bracket_stack = []
+        self.label_counter = 0
+
+    def run(self):
+        while (self.cur and self.cur[0] != 'END'):
+            self.function_def()
+
+    def cur_val(self):
+        return getattr(self.compiler, self.cur[0])[self.cur[1]]
+    
+    def is_delimiter(self):
+        return self.cur_val() in [';', ',', '(', ')', '{', '}']
+    
+    def function_def(self):
+        ...
+
+    def next(self):
+        ...
+    
+    def match_word(self, type):
+        ...
+    
+    def match_constant(self):
+        ...
+
+    def match_delimiter(self):
+        ...
+
+    def parameter_list(self):
+        ...
+
+    def parameter_dec(self):
+        self.type()
+        self.match_word('identifiers')
+
+    def type(self):
+        ...
+
+    def compound_statement(self):
+        ...
+
+    def declaration_list(self):
+        while self.cur[0] == 'keywords':
+            self.declaration()
+
+    def declaration(self):
+        ...
+
+    def statement_list(self):
+        ...
+
+    def statement(self):
+        ...
+
+    def expr_statement(self):
+        ...
+
+    def control_statement(self):
+        ...
+
+    def expr(self):
+        return self.assignment_expr()
+
+    def new_label(self):
+        self.label_counter += 1
+        return f'{self.label_counter}'
+
+    def get_label(self):
+        return  f'{self.label_counter}'
+
+    def assignment_expr(self):
+        ...
+
+    def logical_expr(self):
+        ...
+
+    def relational_expr(self):
+        ...
+
+    def add_expr(self):
+        ...
+
+    def mul_expression(self):
+        ...
+
+    def while_statement(self):
+        ...
+
+    def if_statement(self):
+        ...
+
+    def factor(self):
+        ...
+
+    def new_temp(self):
+        ...
+
+\end{lstlisting}
+
+\subsection{中间代码生成与解释执行}
+\quad\quad
+中间代码生成器将语法分析器生成的语法树转换为四元式等中间表示形式。解释器负责执行这些中间代码。实现的功能包括：
+\begin{itemize}
+    \item 生成四元式表示的中间代码。每个四元式表示一个简单的操作，如赋值、算术运算或条件跳转。
+    \item 解释执行中间代码，支持基本的算术和逻辑运算。解释器逐条执行四元式，根据操作类型执行相应的计算或跳转。
+    \item 处理基本的控制结构，如条件跳转和循环。解释器能够正确执行if语句和while循环，实现程序的控制流。
+\end{itemize}
+
+中间代码的生成和执行是编译器的重要组成部分。通过生成中间代码，我们能够在不同的执行环境下运行代码，提高编译器的灵活性和可移植性。
+完成了这一步后就能够将顶层模块封装，以下是顶层模块的代码示例：
+
+\begin{lstlisting}
+class Compiler:
+    def __init__(self):
+        self.keywords = [
+            'int',   'void', 'break', 'float',  'while', 'do',      'struct',
+            'const', 'case', 'for',   'return', 'if',    'default', 'else',
+            'char'
+        ]
+        self.punctuation = [
+            '-', '/', '(', ')', '==', '<=', '<', '+',
+            '*', '>', '=', ',', ';',  '++', '{', '}'
+        ]
+        self.identifiers      = []
+        self.constants_int    = []
+        self.constants_float  = []
+        self.constants_char   = []
+        self.constants_string = []
+        self.tokens           = []
+        self.symbol_table     = SymbolTable()
+        self.quadruples       = []
+        self.code  = ''
+        self.error = ''
+    
+    def compile(self):
+        lexer = Lexer(self)
+        lexer.tokenize()
+        parser = Parser(self)
+        parser.run()
+        interpret = Interpreter(self)
+        interpret.execute()
+    
+    def val_token(self, token):
+        return getattr(self, token[0])[token[1]]
+    
+    ...
+\end{lstlisting}
+
+\subsection{集成开发环境（IDE）}
+\quad\quad 
+为了提供一个用户友好的开发环境，我们开发了一个基于PySide6的集成开发环境。IDE的主要功能包括：
+\begin{itemize}
+    \item 提供代码编辑器。用户可以方便地编写和修改代码。还能从控制面板观察自己代码的编译运行情况。
+    \item 集成编译器功能，支持代码编译和运行。用户可以直接在IDE中编译和运行代码，查看编译结果和运行输出。
+    \item 提供错误检测和报告机制。在编译过程中，IDE能够识别并报告词法和语法错误，帮助用户调试代码。
+\end{itemize}
+
+IDE的实现基于PySide6库，通过定义一系列的窗口、小部件和事件处理函数，实现了一个功能丰富的开发环境。
+
+IDE的部分代码示意如下：
+\begin{lstlisting}
+class IDE(FluentWindow):
+    """Main Window"""
+    def __init__(self):
+        super().__init__()
+        self.initWindow()
+        self.splashScreen = SplashScreen(self.windowIcon(), self)
+        self.splashScreen.setIconSize(QSize(210, 210))
+        self.show()
+        self.createSubInterface()
+        
+        self.homeInterface       = Home("Home Interface", self)
+        self.workspaceInterface  = Workspace('Workspace Interface', self)
+        self.controllerInterface = Controller('Controller Interface', self)
+        self.helperInterface     = Helper('Helper Interface', self)
+        self.aboutInterface      = About('About Interface', self)
+        self.settingInterface    = Setting('Setting Interface', self)
+        self.compiler            = Compiler()
+
+        self.initNavigation()
+        self.splashScreen.finish()
+
+    def initNavigation(self):
+        self.addSubInterface(self.homeInterface, FIF.HOME, '主页 Home')
+        self.addSubInterface(self.workspaceInterface, FIF.DEVELOPER_TOOLS, '工作区 Work Space')
+        self.addSubInterface(self.controllerInterface, FIF.APPLICATION, '控制台 Control Menu')
+        self.addSubInterface(self.helperInterface, FIF.BOOK_SHELF, '帮助文档 Helper Document')
+
+        self.addSubInterface(self.aboutInterface, FIF.PEOPLE, '关于 About', NavigationItemPosition.BOTTOM)
+        self.addSubInterface(self.settingInterface, FIF.SETTING, '设置 Settings', NavigationItemPosition.BOTTOM)
+
+    def initWindow(self):
+        setTheme(Theme.DARK)
+        self.resize(900, 700)
+        self.setWindowIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images', 'SOSlogo.png')))
+        self.setWindowTitle('欢迎！Welcome to PyC-IDE')
+
+    def createSubInterface(self):
+        loop = QEventLoop(self)
+        QTimer.singleShot(618, loop.quit)
+        loop.exec()
+
+    def setupUI(self):
+        self.setMinimumWidth(800)
+        self.setMinimumHeight(600)
+    
+    ...
+\end{lstlisting}
+
+\section{遇到的问题和挑战}
+\quad\quad
+在项目开发过程中，我们遇到了一些问题和挑战，包括但不限于：
+\begin{itemize}
+    \item 词法分析的复杂性。在处理不同类型的词法单元时，需要定义和维护多种正则表达式规则，确保词法分析器能够正确解析各种输入。
+    \item 语法分析的扩展性。为了支持更多的语法结构和控制结构，语法分析器的递归函数需要不断扩展和修改，确保其能够正确解析复杂的语法。
+    \item 中间代码的优化。生成的中间代码需要具备良好的执行效率，这要求我们在生成中间代码时考虑优化策略，减少冗余操作。
+    \item IDE的用户体验设计。为了提供一个用户友好的开发环境，我们需要设计和实现多种界面和交互功能，确保IDE使用方便且功能丰富。
+\end{itemize}
+
+尽管遇到了这些挑战，我们通过团队协作和持续优化，逐步解决了大部分问题，并在项目中取得了一定的进展。
+
+\section{下一步计划}
+\quad\quad
+在接下来的开发过程中，我们计划完成以下工作：
+\begin{itemize}
+    \item 继续优化词法分析器和语法分析器，增加对更多语法结构和语言特性的支持。包括但不限于函数调用、数组处理、结构体定义等。
+    \item 实现更多的中间代码优化策略，提高代码执行效率。通过静态分析和优化技术，减少冗余操作，提高程序运行速度。
+    \item 增强IDE的功能和用户体验。增加更多的编辑功能，如代码格式化、代码折叠等；优化编译和运行过程，提高响应速度和稳定性。
+    \item 进行全面的测试和调试，确保编译器和IDE的稳定性和可靠性。通过编写测试用例和自动化测试脚本，发现并修复潜在的错误和漏洞。
+\end{itemize}
+
+我们的目标是在项目的最终阶段，交付一个功能完整、性能优良、用户友好的编译器和集成开发环境。
+
+\section{总结}
+\quad\quad
+本项目旨在开发一个集成开发环境，支持基本的代码编辑、编译和运行功能。
+通过实现词法分析器、语法分析器、中间代码生成器和解释器，我们初步构建了一个简单的编译器，并集成到一个用户友好的IDE中。
+尽管在开发过程中遇到了一些问题和挑战，但我们通过团队协作和持续优化，解决了大部分问题，并在项目中取得了一定的进展。
+在接下来的开发过程中，我们将继续优化和扩展现有功能，增强系统的稳定性和性能，确保项目按时高质量完成。
+
+\begin{flushright}\begin{tabular}{rl}
+  姓名: & 李俊洁\\
+  班级: & 计算机2204 \\
+  学号: & 20225443 \\
+  课程: & 编译原理课程设计 \\
+  日期: & June 10, 2024 \\
+  制作: & \LaTeX \\
+  & 感谢您的批阅！
+\end{tabular}\end{flushright}
+\end{document}
