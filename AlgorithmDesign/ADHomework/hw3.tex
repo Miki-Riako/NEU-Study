@@ -1,0 +1,199 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper, margin=2cm]{geometry}
+\usepackage{amsthm}
+\usepackage{amsmath, amssymb}
+\usepackage{circuitikz}
+\usepackage{graphicx}
+\usepackage{karnaugh-map}
+\usepackage{newtxtext, newtxmath}
+\usepackage{tcolorbox}
+\usepackage{tikz}
+\usepackage{titlesec}
+\usepackage{xcolor}
+\usepackage{xeCJK}
+\usepackage{listings}
+\definecolor{lightblue}{RGB}{135, 206, 250}
+\tcbuselibrary{skins,theorems}
+
+\titleformat{\section}[block]{\Large\bfseries\centering}{}{0pt}{}
+\titleformat{\subsection}[block]{\bfseries}{\thesubsection}{2pt}{}
+
+\newtcbtheorem[no counter]{proposition}{\large\hspace{-8pt}Proposition}{
+  enhanced,
+  colback=white,
+  colframe=lightblue,
+  left=12pt,
+  right=12pt,
+  top=24pt,
+  bottom=24pt,
+  fonttitle=\bfseries
+}{prop}
+\newtcbtheorem[]{question}{\large\hspace{-8pt}Question :}{
+  enhanced,
+  colback=white,
+  colframe=black,
+  left=12pt,
+  right=12pt,
+  top=24pt,
+  bottom=24pt,
+  fonttitle=\bfseries
+}{qst}
+\newenvironment{Answer}{
+  \vspace{12pt}
+  {\large\textbf{\textit{\hspace{-12pt}Answer:}}}\par
+  \vspace{8pt}
+} {\vspace{24pt}}
+\newenvironment{Proof}{
+  \vspace{12pt}
+  {\large\textbf{\textit{\hspace{-12pt}Proof:}}}\par
+  \vspace{8pt}
+} {\vspace{24pt}}
+
+\lstset{
+    language=Python,
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{gray},
+    stringstyle=\color{red},
+    showstringspaces=false,
+    numberstyle=\tiny\color{gray},
+    stepnumber=1,
+    numbersep=10pt,
+    frame=single,
+    breaklines=true,
+    captionpos=b
+}
+
+\title{\textbf{Algorithm Design Homework 3}}
+\date{June 18, 2024}
+
+\begin{document}
+\maketitle
+
+\begin{question}{}{}
+找零钱问题：假设一个硬币系统有三种硬币(1分，5分，10分)，现在要找给顾客一角五分的零钱。每次拿出不超过零钱数量的最大面值硬币 (即贪心选择策略)，将使所拿出的硬币个数最少。
+\begin{itemize}
+  \item (1)证明:硬币系统 (1分，5分，10分)通过贪心选择策略能够得到任意零钱n的最优解。
+  \item (2)分析:为什么硬币系统 (1分，5分，6分) 通过贪心选择策略不一定能够得到任意零钱n的最优解。
+  \item (3)设计: 硬币系统 (1分，5分，6分)要想得到任意零钱n的最优解，如何设计算法?
+\end{itemize}
+\end{question}
+\begin{Answer}
+\subsection*{(1)贪心策略的证明}
+\noindent
+
+\textbf{贪心选择策略}指的是每次尽可能选择面值最大的硬币，直到达到所需的总金额。
+
+对于硬币系统 (1分，5分，10分)：
+
+\begin{itemize}
+  \item 假设我们需要找 n 分的零钱。
+  \item 贪心策略的步骤是：每次尽量使用 10 分的硬币，然后是 5 分的硬币，最后是 1 分的硬币。
+\end{itemize}
+
+我们来证明这种策略总是能得到最优解。
+
+证明：
+假设我们要找 n 分的零钱，用贪心策略得到的硬币数是最优的。
+如果我们找到的硬币组合不是最优的，那应该存在另一种组合，硬币数量更少。
+
+\begin{itemize}
+  \item 对于任意 n，当 n ≥ 10 时，使用一个 10 分硬币后，剩余的钱仍然可以用相同的策略处理。
+  \item 如果 10 ≤ n < 15，可以用一个 10 分硬币加上剩余的 1-4 分，这样总是最少的硬币数。
+  \item 如果 5 ≤ n < 10，可以用一个 5 分硬币加上剩余的 1-4 分，这样也是最少的硬币数。
+  \item 如果 1 ≤ n < 5，可以直接用 1 分硬币，这也是最少的硬币数。
+\end{itemize}
+
+因此，贪心策略在每一步都是最优的，最终得到的解也是最优解。
+
+\subsection*{(2)贪心策略不可行的分析}
+\noindent
+对于硬币系统 (1分，5分，6分)：
+
+\begin{itemize}
+  \item 假设我们需要找 n 分的零钱。
+  \item 贪心策略的步骤是：每次尽量使用 6 分的硬币，然后是 5 分的硬币，最后是 1 分的硬币。
+\end{itemize}
+
+我们来看一个反例：
+
+假设需要找 10 分的零钱：
+
+\begin{itemize}
+  \item 贪心策略会首先选择一个 6 分的硬币，然后还需要找 4 分的零钱。
+    这时只能用 1 分的硬币找到 4 分，总共需要 5 个硬币（1个6分 + 4个1分）。
+  \item 但是，最优解应该是使用两个 5 分硬币，总共需要 2 个硬币。
+\end{itemize}
+
+这个例子说明了贪心策略不能保证总是找到最优解，因为选择最大面值硬币并不一定总是能得到硬币数量最少的组合。
+
+\subsection*{(3)算法设计}
+
+为了解决这个问题，我们可以使用动态规划（Dynamic Programming）算法来找到最优解。
+
+动态规划算法设计：
+我们将使用一个二维数组 dp，其中 dp[i][j] 表示找到 i 分零钱时，用硬币 j 的最少数量。
+我们还将使用一个数组 coin\_count 来记录每个金额所需的硬币种类的数量。
+
+\begin{itemize}
+  \item 初始化一个数组 dp，大小为 (amount + 1) x len(coins)，初始值为 0，表示每种硬币的数量。
+  \item 初始化一个数组 min\_coins，大小为 amount + 1，初始值为无穷大，表示找到每个金额所需的最少硬币数。min\_coins[0] = 0 表示 0 分零钱需要 0 个硬币。
+  \item 对于每个金额 i，从 1 到 amount，遍历每种硬币面值 coin，如果当前面值小于等于 i，更新 min\_coins[i] 和 dp[i] 为最优值。
+\end{itemize}
+
+下面是详细的算法实现：
+
+\begin{lstlisting}
+def min_coins(coins, amount):
+    # Using amount + 1 represents the infinite value.
+    dp = [[0] * len(coins) for _ in range(amount + 1)]
+    min_coins = [amount + 1] * (amount + 1)
+    min_coins[0] = 0
+
+    for i in range(1, amount + 1):
+        for j, coin in enumerate(coins):
+            if i - coin >= 0:
+                if min_coins[i - coin] + 1 < min_coins[i]:
+                    min_coins[i] = min_coins[i - coin] + 1
+                    dp[i] = dp[i - coin].copy()
+                    dp[i][j] += 1
+
+    if min_coins[amount] == amount + 1:
+        return -1, []
+    else:
+        return min_coins[amount], dp[amount]
+\end{lstlisting}
+
+解释：
+
+\begin{itemize}
+  \item dp 数组用于记录每种硬币的数量。
+  \item min\_coins 数组用于记录每个金额所需的最少硬币数。
+  \item 在更新 min\_coins[i] 时，如果发现使用当前硬币 coin 能减少硬币数量，就更新 dp[i] 数组中对应的硬币数量。
+\end{itemize}
+
+输出：
+
+\begin{itemize}
+  \item 最少硬币数。
+  \item 每种硬币的数量。
+\end{itemize}
+
+这样我们不仅得到了最少硬币数，同时也得到了每种硬币的具体数量。
+
+这个算法的时间复杂度是$O(n×k)$，其中 n 是金额，k 是硬币种类数。
+通过动态规划，我们可以确保找到每个金额的最优解。
+
+\end{Answer}
+
+\begin{flushright}\begin{tabular}{rl}
+  姓名: & 李俊洁\\
+  班级: & 计算机2204 \\
+  学号: & 20225443 \\
+  课程: & 算法设计与分析 \\
+  日期: & June 18, 2024 \\
+  制作: & \LaTeX \\
+  & 感谢您的批阅！
+\end{tabular}\end{flushright}
+\end{document}

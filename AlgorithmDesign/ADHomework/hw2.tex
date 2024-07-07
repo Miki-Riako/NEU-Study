@@ -1,0 +1,177 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper, margin=2cm]{geometry}
+\usepackage{amsthm}
+\usepackage{amsmath, amssymb}
+\usepackage{circuitikz}
+\usepackage{graphicx}
+\usepackage{karnaugh-map}
+\usepackage{newtxtext, newtxmath}
+\usepackage{tcolorbox}
+\usepackage{tikz}
+\usepackage{titlesec}
+\usepackage{xcolor}
+\usepackage{xeCJK}
+\usepackage{listings}
+\definecolor{lightblue}{RGB}{135, 206, 250}
+\tcbuselibrary{skins,theorems}
+
+\titleformat{\section}[block]{\Large\bfseries\centering}{}{0pt}{}
+\titleformat{\subsection}[block]{\bfseries}{\thesubsection}{2pt}{}
+
+\newtcbtheorem[no counter]{proposition}{\large\hspace{-8pt}Proposition}{
+  enhanced,
+  colback=white,
+  colframe=lightblue,
+  left=12pt,
+  right=12pt,
+  top=24pt,
+  bottom=24pt,
+  fonttitle=\bfseries
+}{prop}
+\newtcbtheorem[]{question}{\large\hspace{-8pt}Question :}{
+  enhanced,
+  colback=white,
+  colframe=black,
+  left=12pt,
+  right=12pt,
+  top=24pt,
+  bottom=24pt,
+  fonttitle=\bfseries
+}{qst}
+\newenvironment{Answer}{
+  \vspace{12pt}
+  {\large\textbf{\textit{\hspace{-12pt}Answer:}}}\par
+  \vspace{8pt}
+} {\vspace{24pt}}
+\newenvironment{Proof}{
+  \vspace{12pt}
+  {\large\textbf{\textit{\hspace{-12pt}Proof:}}}\par
+  \vspace{8pt}
+} {\vspace{24pt}}
+
+\lstset{
+    language=Python,
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{gray},
+    stringstyle=\color{red},
+    showstringspaces=false,
+    numberstyle=\tiny\color{gray},
+    stepnumber=1,
+    numbersep=10pt,
+    frame=single,
+    breaklines=true,
+    captionpos=b
+}
+
+\title{\textbf{Algorithm Design Homework 2}}
+\date{June 18, 2024}
+
+\begin{document}
+\maketitle
+
+\begin{question}{}{}
+给定一个0-1背包问题weight w = \{2,1,3,2\}, value v = \{12,10,20,15\}, capacity c = 5。
+如何使动态规划算法在O(c)空间内得到最优解(即n元0-1向量) ?
+\begin{itemize}
+  \item (1) 给出得到最优解的计算过程。
+  \item (2) 给出该过程所需的空间复杂度。
+  \item (3) 给出该过程的时间复杂度。
+\end{itemize}
+\end{question}
+\begin{Answer}
+\subsection*{计算过程}
+\noindent
+
+首先，定义动态规划数组 dp，其中 dp[j] 表示容量为 j 时可以获得的最大价值。
+
+初始化 dp 数组：
+
+$$dp=[0]*(c + 1)$$
+
+我们遍历每个物品，并更新\texttt{dp}数组，从背包的最大容量开始往前更新。
+
+物品权重和价值分别为：
+\begin{itemize}
+  \item weight = [2, 1, 3, 2]
+  \item value = [12, 10, 20, 15]
+  \item capacity = 5
+\end{itemize}
+
+可以构建初步的算法如下：
+
+\begin{lstlisting}
+def knapsack(weight, value, c):
+  dp = [0] * (c + 1)
+
+  for i in range(len(weight)):
+      for j in range(c, weight[i] - 1, -1):
+          dp[j] = max(dp[j], dp[j - weight[i]] + value[i])
+
+  max_value = dp[c]
+\end{lstlisting}
+
+接下来重建最优解路径。
+
+为了重建最优解路径，我们需要在更新dp数组时记录下选择的物品。
+这里可以使用一个二维数组\texttt{decision}，其中\texttt{decision[i][j]}表示在考虑前i个物品，容量为j时的选择情况。
+
+算法如下：
+
+\begin{lstlisting}
+def knapsack(weight, value, c):
+    n = len(weight)
+    dp = [0] * (c + 1)
+    decision = [[0] * (c + 1) for _ in range(n)]
+
+    for i in range(n):
+        for j in range(c, weight[i] - 1, -1):
+            if dp[j] < dp[j - weight[i]] + value[i]:
+                dp[j] = dp[j - weight[i]] + value[i]
+                decision[i][j] = 1
+
+    j = c
+    chosen_items = [0] * n
+    for i in range(n - 1, -1, -1):
+        if decision[i][j] == 1:
+            chosen_items[i] = 1
+            j -= weight[i]
+
+    # return dp[c], chosen_items
+    return chosen_items
+\end{lstlisting}
+
+\subsection*{空间复杂度}
+\noindent
+
+原始的 dp 数组和 decision 数组的空间复杂度：
+
+\begin{itemize}
+  \item dp 数组的空间复杂度为 O(c)，因为我们只需要存储容量为 c 的一维数组。
+  \item decision 数组的空间复杂度为 O(nc)，用于记录每个物品在每种容量下的选择情况。
+\end{itemize}
+
+由于我们只关心最优解和选择的物品，我们可以只记录选择情况，从而优化空间复杂度。
+
+\subsection*{时间复杂度}
+\noindent
+
+对于每个物品，我们都遍历了容量从 c 到 weight[i]，因此时间复杂度为 O(nc)。
+
+这样，我们得到了一个空间复杂度为O(nc)，
+时间复杂度为O(nc)的动态规划算法来解决 0-1 背包问题，
+并且能够输出最优解向量。
+
+\end{Answer}
+
+\begin{flushright}\begin{tabular}{rl}
+  姓名: & 李俊洁\\
+  班级: & 计算机2204 \\
+  学号: & 20225443 \\
+  课程: & 算法设计与分析 \\
+  日期: & June 18, 2024 \\
+  制作: & \LaTeX \\
+  & 感谢您的批阅！
+\end{tabular}\end{flushright}
+\end{document}
