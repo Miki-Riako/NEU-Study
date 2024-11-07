@@ -1,0 +1,297 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper, margin=2cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{float}
+\usepackage{ulem}
+\usepackage{xeCJK}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{indentfirst}
+\setmainfont{Times New Roman}
+\setCJKmonofont[BoldFont=SimHei, AutoFakeBold=true]{SimSun}
+\lstset{
+    language=Python,
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{green},
+    stringstyle=\color{red},
+    showstringspaces=false,
+    numberstyle=\tiny\color{gray},
+    stepnumber=1,
+    numbersep=10pt,
+    frame=single,
+    breaklines=true,
+    captionpos=b
+}
+
+\begin{document}
+
+\input{cover.tex}
+
+\section{引言}
+网络爬虫是数据收集和分析中的重要技术，能够为研究和实践应用提供有价值的见解。本文档描述了为 \texttt{getstickerpack.com} 和 \texttt{osu.ppy.sh} 网站创建的两个爬虫，这些爬虫分别用于收集贴纸和与谱面相关的评论。这些爬虫为贴纸爱好者和 osu! 玩家提供信息检索的便利。
+
+目标网站具有特定的受众群体：\texttt{getstickerpack.com} 针对对自定义贴纸包感兴趣的用户，而 \texttt{osu.ppy.sh} 是 osu! 节奏游戏的官方平台，面向全球的节奏游戏玩家。
+
+\section{爬虫描述}
+本节将详细介绍两个爬虫的目的、实现和使用的技术。
+
+\subsection{贴纸包爬虫}
+贴纸爬虫的目标是 \texttt{getstickerpack.com}，一个提供自定义贴纸包的网站。该爬虫从用户指定的贴纸包中检索贴纸图像，并将其存储在本地目录中以供进一步使用。
+
+爬虫的主要功能如下：
+\begin{itemize}
+    \item 使用 HTTP 请求连接到用户指定的 URL。
+    \item 使用 \texttt{BeautifulSoup} 库解析 HTML 内容以提取贴纸图像的 URL。
+    \item 下载并将每个贴纸图像保存到结构化的本地文件夹中。
+\end{itemize}
+
+以下是贴纸包爬虫主函数的代码片段：
+\begin{lstlisting}[language=Python, caption=贴纸包爬虫代码片段]
+import requests
+from bs4 import BeautifulSoup
+import os
+
+folder_indices = {}
+
+def download_images(url, folder_name):
+    global folder_indices
+    response = requests.get(url)
+    images = BeautifulSoup(response.content, 'html.parser').find_all('img', {'class': 'img-thumbnail sticker-image'})
+    if not os.path.exists(folder_name):
+        os.makedirs(folder_name)
+        folder_indices[folder_name] = 1
+    index = folder_indices[folder_name]
+    for image in images:
+        image_url = image['data-src-large']
+        image_name = f"{folder_name}_{index}.png"
+        img_data = requests.get(image_url).content
+        with open(os.path.join(folder_name, image_name), 'wb') as handler:
+            handler.write(img_data)
+        print(f"已爬取 {image_name}")
+        index += 1
+    folder_indices[folder_name] = index
+
+if __name__ == "__main__":
+    user_input = input("请输入要爬取的表情（例如hatsune-miku-1或menhera-chan-1-1）：")
+    download_images('https://getstickerpack.com/stickers/'+user_input, 'user_input')
+    print("已完成爬取")
+
+\end{lstlisting}
+
+\subsection{Osu! 谱面爬虫}
+osu! 谱面爬虫从 \texttt{osu.ppy.sh} 中提取元数据（例如评论）并下载谱面文件，旨在帮助 osu! 玩家更高效地获取谱面。其功能如下：
+
+\begin{itemize}
+    \item 从谱面页面请求 HTML 内容。
+    \item 使用 JSON 提取和 \texttt{BeautifulSoup} 解析评论以收集用户留言。
+    \item 将评论保存为 CSV 文件以供进一步分析。
+    \item 下载谱面（.osz）文件以供离线使用。
+\end{itemize}
+
+以下是运行 osu! 爬虫主函数的代码片段：
+\begin{lstlisting}[language=Python, caption=Osu! 谱面爬虫代码片段]
+import requests
+from bs4 import BeautifulSoup
+import json
+import csv
+import os
+
+class OsuCrawler:
+    def __init__(self, beatmap_id):
+        self.base_url = f"https://osu.ppy.sh/beatmapsets/{beatmap_id}"
+        self.session = requests.Session()
+        self.headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36"
+        }
+        self.beatmap_id = beatmap_id
+
+    def fetch_page(self):
+        """请求页面内容"""
+        try:
+            response = self.session.get(self.base_url, headers=self.headers)
+            response.raise_for_status()
+            return response.text
+        except requests.exceptions.RequestException as e:
+            print(f"请求出错: {e}")
+            return None
+
+    def parse_comments_from_json(self, page_content):
+        """从 JSON 中解析评论数据"""
+        soup = BeautifulSoup(page_content, "html.parser")
+        script_tag = soup.find("script", id="json-comments", type="application/json")
+        if not script_tag:
+            print("未找到评论数据。")
+            return []
+        
+        try:
+            comments_data = json.loads(script_tag.string)
+            comments = comments_data.get("comments", [])
+            parsed_comments = []
+            for comment in comments:
+                user_id = comment.get("user_id")
+                text = comment.get("message")
+                created_at = comment.get("created_at")
+                parsed_comments.append({
+                    "user_id": user_id,
+                    "text": text,
+                    "created_at": created_at
+                })
+            return parsed_comments
+        except json.JSONDecodeError:
+            print("评论数据解析失败。")
+            return []
+
+    def download_beatmap(self):
+        """下载曲谱文件"""
+        download_url = f"{self.base_url}/download"
+        try:
+            response = self.session.get(download_url, headers=self.headers, stream=True)
+            if response.status_code == 200:
+                filename = f"beatmap_{self.beatmap_id}.osz"
+                with open(filename, "wb") as f:
+                    for chunk in response.iter_content(1024):
+                        f.write(chunk)
+                print(f"谱面下载完成: {filename}")
+            else:
+                print("谱面下载失败，可能需要登录。")
+        except requests.exceptions.RequestException as e:
+            print(f"下载出错: {e}")
+
+    def save_comments_csv(self, comments):
+        """保存评论为 CSV 文件"""
+        if not comments:
+            print("没有评论数据可保存。")
+            return
+        with open(f"comments_{self.beatmap_id}.csv", "w", encoding="utf-8", newline='') as csvfile:
+            fieldnames = ["user_id", "created_at", "text"]
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            for comment in comments:
+                writer.writerow(comment)
+        print(f"评论保存完成: comments_{self.beatmap_id}.csv")
+
+    def run(self):
+        """执行爬虫流程"""
+        page_content = self.fetch_page()
+        if page_content:
+            comments = self.parse_comments_from_json(page_content)
+            self.save_comments_csv(comments)
+            self.download_beatmap()
+
+# 主函数，支持单个曲目ID或范围
+if __name__ == "__main__":
+    user_input = input("请输入要爬取的曲目ID或范围（例如 2113834 或 2113830-2113835）：")
+    
+    if '-' in user_input:
+        start_id, end_id = map(int, user_input.split('-'))
+        for beatmap_id in range(start_id, end_id + 1):
+            print(f"\n开始爬取曲目ID: {beatmap_id}")
+            crawler = OsuCrawler(beatmap_id)
+            crawler.run()
+    else:
+        beatmap_id = int(user_input)
+        print(f"\n开始爬取曲目ID: {beatmap_id}")
+        crawler = OsuCrawler(beatmap_id)
+        crawler.run()
+
+\end{lstlisting}
+
+\section{方法}
+
+\subsection{使用的技术和库}
+这些爬虫使用 Python 实现，使用了以下库：
+\begin{itemize}
+    \item \texttt{requests}：用于处理 HTTP 请求并获取页面内容。
+    \item \texttt{BeautifulSoup}：用于解析 HTML 内容并提取数据。
+    \item \texttt{json}：用于处理嵌入在 HTML 中的 JSON 数据。
+    \item \texttt{csv}：用于将提取的数据导出为 CSV 文件。
+    \item \texttt{os}：用于管理文件系统操作，例如创建目录和保存文件。
+\end{itemize}
+
+\subsection{爬虫工作流程}
+爬虫遵循以下标准工作流程：
+\begin{enumerate}
+    \item 用户提供特定的贴纸包 ID 或谱面 ID（或 ID 范围）。
+    \item 爬虫发送 HTTP 请求以获取指定 URL 的内容。
+    \item 使用 \texttt{BeautifulSoup} 解析 HTML 内容以定位图像或评论。
+    \item 将数据（例如贴纸或评论）保存到本地文件以供进一步使用。
+\end{enumerate}
+
+\section{目标受众和使用场景}
+爬虫的目标用户为：
+\begin{itemize}
+    \item \textbf{贴纸包用户}：对使用独特贴纸自定义消息体验感兴趣的用户。
+    \item \textbf{Osu! 玩家}：希望下载新谱面或分析社区评论的爱好者和竞技玩家。
+\end{itemize}
+
+\subsection{使用场景}
+\begin{itemize}
+    \item 贴纸爬虫可用于收集大量贴纸，以创建更丰富的个人或社区贴纸包。
+    \item Osu! 谱面爬虫可以帮助玩家分析谱面的社区反馈或下载谱面以便离线练习。
+\end{itemize}
+
+\subsection{演示}
+对于贴纸包爬虫，只需要输入相应的贴纸包，即可自动下载：
+\begin{center}\includegraphics[width=1\textwidth]{image/CN_1.png}\end{center}
+
+爬取贴纸包结果：
+\begin{center}\includegraphics[width=0.5\textwidth]{image/CN_2.png}\end{center}
+
+这里只展示了一部分贴纸包，可以按用户需求爬取大量更多贴纸包。
+
+对于OSU游戏爬虫，我们能够分别爬取谱面和对应的评论：
+\begin{center}\includegraphics[width=1\textwidth]{image/CN_3.png}\end{center}
+
+爬取谱面结果：
+\begin{center}\includegraphics[width=0.5\textwidth]{image/CN_4.png}\end{center}
+
+爬取评论结果：
+\begin{center}\includegraphics[width=1\textwidth]{image/CN_5.png}\end{center}
+
+\section{数据分析及潜在见解}
+爬虫收集的图像和评论数据可以进一步分析。例如：
+\begin{itemize}
+    \item \textbf{贴纸分析}：根据主题对贴纸进行分类，了解流行趋势。
+    \item \textbf{谱面评论分析}：对谱面评论进行情感分析，以评估用户反馈并确定特定谱面的受欢迎程度或评价。
+\end{itemize}
+
+\section{结论}
+本文档介绍了两个用于提取贴纸包图像和 osu! 谱面数据的实用网络爬虫。这些爬虫旨在为对贴纸定制和 osu! 节奏游戏感兴趣的目标用户提供便利。所收集的数据为进一步分析提供了机会，可能为用户偏好和社区动态提供见解。
+
+\section{未来工作}
+对爬虫的未来改进包括：
+\begin{itemize}
+    \item 添加更高级的数据分析功能，例如情感分析和图像分类。
+    \item 引入用户身份验证，以支持抓取需要登录的其他数据。
+    \item 利用数据库存储收集的数据，以便更轻松地管理和查询。
+\end{itemize}
+
+\begin{flushright}
+\begin{tabular}{rl}
+    姓名: & 李俊洁\\
+    班级: & 计算机2204 \\
+    学号: & 20225443 \\
+    课程: & 计算机网络 \\
+    日期: & November 6, 2024 \\
+    制作: & \LaTeX \\
+    & 感谢您的批阅！
+\end{tabular}
+\end{flushright}
+
+\begin{thebibliography}{9}
+\bibitem{beautifulsoup} \texttt{BeautifulSoup} 文档：\url{https://www.crummy.com/software/BeautifulSoup/bs4/doc/}
+\bibitem{requests} \texttt{Requests} 文档：\url{https://docs.python-requests.org/en/master/}
+\bibitem{osu} Osu! 官方网站：\url{https://osu.ppy.sh/}
+\end{thebibliography}
+
+\end{document}

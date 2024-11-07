@@ -1,0 +1,359 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper, margin=2cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{float}
+\usepackage{ulem}
+\usepackage{xeCJK}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{indentfirst}
+\setmainfont{Times New Roman}
+\setCJKmonofont[BoldFont=SimHei, AutoFakeBold=true]{SimSun}
+\lstset{
+    language=Python,
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{green},
+    stringstyle=\color{red},
+    showstringspaces=false,
+    numberstyle=\tiny\color{gray},
+    stepnumber=1,
+    numbersep=10pt,
+    frame=single,
+    breaklines=true,
+    captionpos=b
+}
+
+\begin{document}
+\input{cover.tex}
+
+\section{引言}
+TCP三次握手是TCP/IP协议栈中最重要的概念之一，它用于在客户端和服务器之间建立可靠的连接。本次实验旨在利用Wireshark抓包分析TCP三次握手的过程，观察数据包中不同协议字段的变化，并分析具体的TCP连接建立情况。通过结合Python编程进行抓包和数据分析，进一步理解TCP连接的建立过程及其重要性。
+
+本文档详细描述了使用Wireshark和Python工具捕获TCP握手过程中的数据包，并使用PyShark对数据包进行过滤和分析的过程。
+
+\section{实验描述}
+本节详细介绍了本次实验的目标和实现方法，包括抓包工具的配置、数据分析过程及各部分的具体功能。
+
+\subsection{抓包与分析工具}
+本实验的主要工具包括：
+\begin{itemize}
+    \item \textbf{tcpdump}：用于抓取网络数据包，是一个命令行工具，能够灵活地进行过滤和抓包操作。
+    \item \textbf{PyShark}：一个用于分析 .pcap 文件的 Python 库，是 tshark 的 Python 接口，可以实现对抓到的数据包进行详细的解析。
+    \item \textbf{Wireshark}：用于抓包和分析的网络协议分析工具，通过图形化界面展示数据包的详细信息，帮助理解协议的工作过程。
+\end{itemize}
+
+\subsection{系统实现}
+实验过程分为以下几个主要部分：
+
+\begin{itemize}
+    \item 启动抓包工具，捕获TCP数据包。
+    \item 通过 Python 程序自动访问指定的网站，以触发TCP三次握手。
+    \item 使用PyShark对抓取到的 .pcap 文件进行解析，分析TCP三次握手的数据包信息。
+\end{itemize}
+
+\subsection{实验流程}
+1. \textbf{启动抓包工具}\newline
+使用 Python 的 \texttt{subprocess} 模块启动 \texttt{tcpdump} 进行抓包。抓包工具被配置为只捕获 TCP 包，以减少抓包文件的大小并聚焦于TCP三次握手的分析。
+
+2. \textbf{自动访问网站}\newline
+通过 Python 程序中的 \texttt{requests} 模块，自动访问指定的目标网站，以触发 TCP 三次握手过程。这一步模拟了客户端与服务器之间建立连接的过程。
+
+3. \textbf{数据包分析}\newline
+抓包完成后，使用 \texttt{PyShark} 对生成的 .pcap 文件进行解析。实验重点是识别三次握手过程中的三个关键数据包：SYN、SYN-ACK、ACK 包，并记录这些数据包中的关键信息，例如源和目的IP地址、源和目的端口、序列号等。
+
+以下是部分 Python 实现的代码片段：
+\begin{lstlisting}[language=Python, caption=抓包与分析的代码片段]
+import requests
+import subprocess
+import time
+import os
+import pyshark
+import logging
+
+# 设置抓包文件路径
+pcap_file = 'tcp_handshake.pcap'
+log_file = 'packet_capture.log'  # 日志文件路径
+
+# 配置 logging 模块，输出信息到控制台和文件
+logging.basicConfig(
+    level=logging.INFO,  # 设置日志级别
+    format='%(asctime)s - %(levelname)s - %(message)s',  # 设置日志格式
+    handlers=[
+        logging.FileHandler(log_file),  # 输出到文件
+        logging.StreamHandler()  # 输出到控制台
+    ]
+)
+
+# 获取 logger 实例
+logger = logging.getLogger()
+
+# 1. 启动 tcpdump 抓包
+def start_tcpdump():
+    logger.info("Starting tcpdump to capture packets...")
+    # 使用 subprocess 启动 tcpdump 命令
+    # -i eth0 指定网卡（替换为实际网卡名，如 eth0 或 wlan0）
+    # tcp 过滤器只抓取 TCP 数据包
+    # -w 指定抓包文件名
+    command = ['sudo', 'tcpdump', '-i', 'eth0', 'tcp', '-w', pcap_file]
+    tcpdump_process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    return tcpdump_process
+
+# 2. 自动访问指定网站
+def visit_website(url):
+    try:
+        logger.info(f"Visiting website: {url}")
+        response = requests.get(url)  # 发起 GET 请求
+        logger.info(f"Website {url} responded with status code {response.status_code}")
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error accessing website: {e}")
+
+# 3. 等待抓包完成并进行分析
+def analyze_pcap():
+    # 等待文件创建，直到文件存在并且大小大于0
+    while not os.path.exists(pcap_file) or os.path.getsize(pcap_file) == 0:
+        logger.info(f"Waiting for packet capture file to be created: {pcap_file}")
+        time.sleep(1)
+
+    logger.info(f"Analyzing the captured packets from {pcap_file}...")
+
+    # 使用 PyShark 分析抓到的 .pcap 文件
+    cap = pyshark.FileCapture(pcap_file)
+
+    # 打印和分析每个数据包
+    for packet in cap:
+        if 'TCP' in packet:
+            logger.info(f"Packet Info: {packet}")
+
+            # 识别 SYN 包（客户端发起连接）
+            if packet.tcp.flags_syn == '1' and packet.tcp.flags_ack == '0':
+                logger.info(f"SYN Packet: {packet}")
+                logger.info(f"Source IP: {packet.ip.src}, Destination IP: {packet.ip.dst}")
+                logger.info(f"Source Port: {packet.tcp.srcport}, Destination Port: {packet.tcp.dstport}")
+                logger.info(f"Sequence Number: {packet.tcp.seq}")
+
+            # 识别 SYN-ACK 包（服务器响应连接请求）
+            elif packet.tcp.flags_syn == '1' and packet.tcp.flags_ack == '1':
+                logger.info(f"SYN-ACK Packet: {packet}")
+                logger.info(f"Source IP: {packet.ip.src}, Destination IP: {packet.ip.dst}")
+                logger.info(f"Source Port: {packet.tcp.srcport}, Destination Port: {packet.tcp.dstport}")
+                logger.info(f"Sequence Number: {packet.tcp.seq}, Acknowledgment Number: {packet.tcp.ack}")
+
+            # 识别 ACK 包（客户端确认连接建立）
+            elif packet.tcp.flags_syn == '0' and packet.tcp.flags_ack == '1':
+                logger.info(f"ACK Packet: {packet}")
+                logger.info(f"Source IP: {packet.ip.src}, Destination IP: {packet.ip.dst}")
+                logger.info(f"Source Port: {packet.tcp.srcport}, Destination Port: {packet.tcp.dstport}")
+                logger.info(f"Sequence Number: {packet.tcp.seq}, Acknowledgment Number: {packet.tcp.ack}")
+
+if __name__ == '__main__':
+    # 启动 tcpdump 抓包
+    tcpdump_process = start_tcpdump()
+    # 等待 tcpdump 启动并捕获部分数据
+    time.sleep(2)  # 等待抓包工具启动
+    # 自动访问网站来触发 TCP 三次握手
+    website_url = input("输入要访问的网站:（http://example.com）")
+    visit_website(website_url)
+    # 给网站请求一些时间以完成三次握手
+    time.sleep(5)  # 等待 5 秒，确保抓到所有数据包
+    # 停止 tcpdump 抓包
+    tcpdump_process.terminate()
+    # 分析抓到的数据包
+    analyze_pcap()
+import requests
+import subprocess
+import time
+import os
+import pyshark
+import logging
+
+# 设置抓包文件路径
+pcap_file = 'tcp_handshake.pcap'
+log_file = 'packet_capture.log'  # 日志文件路径
+
+# 配置 logging 模块，输出信息到控制台和文件
+logging.basicConfig(
+    level=logging.INFO,  # 设置日志级别
+    format='%(asctime)s - %(levelname)s - %(message)s',  # 设置日志格式
+    handlers=[
+        logging.FileHandler(log_file),  # 输出到文件
+        logging.StreamHandler()  # 输出到控制台
+    ]
+)
+
+# 获取 logger 实例
+logger = logging.getLogger()
+
+# 1. 启动 tcpdump 抓包
+def start_tcpdump():
+    logger.info("Starting tcpdump to capture packets...")
+    # 使用 subprocess 启动 tcpdump 命令
+    # -i eth0 指定网卡（替换为实际网卡名，如 eth0 或 wlan0）
+    # tcp 过滤器只抓取 TCP 数据包
+    # -w 指定抓包文件名
+    command = ['sudo', 'tcpdump', '-i', 'eth0', 'tcp', '-w', pcap_file]
+    tcpdump_process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    return tcpdump_process
+
+# 2. 自动访问指定网站
+def visit_website(url):
+    try:
+        logger.info(f"Visiting website: {url}")
+        response = requests.get(url)  # 发起 GET 请求
+        logger.info(f"Website {url} responded with status code {response.status_code}")
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error accessing website: {e}")
+
+# 3. 等待抓包完成并进行分析
+def analyze_pcap():
+    # 等待文件创建，直到文件存在并且大小大于0
+    while not os.path.exists(pcap_file) or os.path.getsize(pcap_file) == 0:
+        logger.info(f"Waiting for packet capture file to be created: {pcap_file}")
+        time.sleep(1)
+
+    logger.info(f"Analyzing the captured packets from {pcap_file}...")
+
+    # 使用 PyShark 分析抓到的 .pcap 文件
+    cap = pyshark.FileCapture(pcap_file)
+
+    # 打印和分析每个数据包
+    for packet in cap:
+        if 'TCP' in packet:
+            logger.info(f"Packet Info: {packet}")
+
+            # 识别 SYN 包（客户端发起连接）
+            if packet.tcp.flags_syn == '1' and packet.tcp.flags_ack == '0':
+                logger.info(f"SYN Packet: {packet}")
+                logger.info(f"Source IP: {packet.ip.src}, Destination IP: {packet.ip.dst}")
+                logger.info(f"Source Port: {packet.tcp.srcport}, Destination Port: {packet.tcp.dstport}")
+                logger.info(f"Sequence Number: {packet.tcp.seq}")
+
+            # 识别 SYN-ACK 包（服务器响应连接请求）
+            elif packet.tcp.flags_syn == '1' and packet.tcp.flags_ack == '1':
+                logger.info(f"SYN-ACK Packet: {packet}")
+                logger.info(f"Source IP: {packet.ip.src}, Destination IP: {packet.ip.dst}")
+                logger.info(f"Source Port: {packet.tcp.srcport}, Destination Port: {packet.tcp.dstport}")
+                logger.info(f"Sequence Number: {packet.tcp.seq}, Acknowledgment Number: {packet.tcp.ack}")
+
+            # 识别 ACK 包（客户端确认连接建立）
+            elif packet.tcp.flags_syn == '0' and packet.tcp.flags_ack == '1':
+                logger.info(f"ACK Packet: {packet}")
+                logger.info(f"Source IP: {packet.ip.src}, Destination IP: {packet.ip.dst}")
+                logger.info(f"Source Port: {packet.tcp.srcport}, Destination Port: {packet.tcp.dstport}")
+                logger.info(f"Sequence Number: {packet.tcp.seq}, Acknowledgment Number: {packet.tcp.ack}")
+
+if __name__ == '__main__':
+    # 启动 tcpdump 抓包
+    tcpdump_process = start_tcpdump()
+    # 等待 tcpdump 启动并捕获部分数据
+    time.sleep(2)  # 等待抓包工具启动
+    # 自动访问网站来触发 TCP 三次握手
+    website_url = input("输入要访问的网站:（http://example.com）")
+    visit_website(website_url)
+    # 给网站请求一些时间以完成三次握手
+    time.sleep(5)  # 等待 5 秒，确保抓到所有数据包
+    # 停止 tcpdump 抓包
+    tcpdump_process.terminate()
+    # 分析抓到的数据包
+    analyze_pcap()
+
+\end{lstlisting}
+
+\section{方法}
+
+\subsection{使用的技术和库}
+本实验的实现涉及到以下工具和库：
+\begin{itemize}
+    \item \texttt{subprocess}：用于启动外部程序（如 \texttt{tcpdump}）以实现抓包。
+    \item \texttt{requests}：用于模拟客户端发起 HTTP 请求，触发 TCP 三次握手。
+    \item \texttt{pyshark}：用于分析抓取到的网络数据包。
+    \item \texttt{logging}：用于记录实验过程中的关键信息。
+\end{itemize}
+
+\subsection{工作流程}
+实验的工作流程可以总结如下：
+\begin{enumerate}
+    \item 使用 \texttt{tcpdump} 抓包工具开始捕获 TCP 数据包。
+    \item 自动访问目标网站，触发 TCP 连接。
+    \item 使用 \texttt{PyShark} 解析抓取到的 .pcap 文件，分析 TCP 三次握手过程中的数据包。
+\end{enumerate}
+
+\section{使用场景}
+本实验的目标是对计算机网络和TCP协议工作机制感兴趣的学生和开发者。通过本次实验，可以学习到：
+\begin{itemize}
+    \item 如何使用抓包工具捕获和分析 TCP 数据包。
+    \item TCP 三次握手的过程及各个阶段的数据包细节。
+    \item Python 编程在抓包与分析过程中的应用。
+\end{itemize}
+
+\subsection{使用场景}
+\begin{itemize}
+    \item 学习网络协议，理解TCP三次握手的详细过程。
+    \item 使用抓包和数据分析技术，排查网络通信中的问题。
+    \item 通过 Python 编程对抓包数据进行自动化分析，提升网络运维和开发的效率。
+\end{itemize}
+
+\section{演示}
+我们的脚本集成了自动访问网站，以防止用户手动访问网站，从而确保 TCP 三次握手过程的触发的准确性。
+首先运行脚本时，会提示用户输入要访问的网站 URL，然后脚本会自动访问该网站并抓取 TCP 数据包，此处以 \textbf{https://zh.wikipedia.org/wiki/Lean} 这个网站为例。
+
+\begin{center}\includegraphics[width=1\textwidth]{image/CN_10.png}\end{center}
+
+抓包完成后，脚本会解析抓取到的数据包，并输出 TCP 三次握手过程中的关键信息。
+
+\begin{center}\includegraphics[width=1\textwidth]{image/CN_11.png}\end{center}
+
+此处一页截图放不下，仅作展示，实际输出会包含更多详细信息。
+
+此外，本脚本将抓取到的数据包保存至本地，存入log文件，以便后续进一步分析。
+
+\begin{center}\includegraphics[width=1\textwidth]{image/CN_12.png}\end{center}
+
+\section{实验结果与分析}
+本实验的抓包与分析结果表明，TCP三次握手过程如下：
+\begin{itemize}
+    \item 客户端首先发送 SYN 包以请求建立连接，包含初始序列号。
+    \item 服务器收到 SYN 包后，回复 SYN-ACK 包，包含服务器的初始序列号以及对客户端 SYN 包的确认。
+    \item 客户端收到 SYN-ACK 包后，回复 ACK 包，确认与服务器建立连接。
+\end{itemize}
+通过 PyShark 对抓包文件的解析，我们能够详细观察到这些数据包的内容，包括IP地址、端口号、序列号等信息。
+
+\section{结论}
+本文档描述了如何通过 Wireshark 抓包和 Python 编程来捕获和分析 TCP 三次握手的过程。通过实验，详细展示了 TCP 连接的建立过程，并通过数据包的内容分析了其具体实现。该实验加深了对 TCP 协议的理解，尤其是在建立可靠连接方面的机制和细节。
+
+\section{未来工作}
+未来可以考虑以下改进：
+\begin{itemize}
+    \item 实现对其他协议（如 UDP、HTTP）的抓包与分析，以更全面地理解网络通信。
+    \item 优化抓包和分析的流程，以支持实时分析和更复杂的数据过滤条件。
+    \item 使用图形化工具展示抓包结果，使分析结果更直观。
+\end{itemize}
+
+\begin{flushright}
+\begin{tabular}{rl}
+    姓名: & 李俊洁\\
+    班级: & 计算机2204 \\
+    学号: & 20225443 \\
+    课程: & 计算机网络 \\
+    日期: & November 6, 2024 \\
+    制作: & \LaTeX \\
+    & 感谢您的批阅！
+\end{tabular}
+\end{flushright}
+
+\begin{thebibliography}{9}
+\bibitem{tcpdump} \texttt{tcpdump} 官方文档：\url{https://www.tcpdump.org/manpages/tcpdump.1.html}
+\bibitem{wireshark} Wireshark 用户指南：\url{https://www.wireshark.org/docs/}
+\bibitem{pyshark} \texttt{PyShark} 文档：\url{https://github.com/KimiNewt/pyshark}
+\end{thebibliography}
+
+\end{document}
